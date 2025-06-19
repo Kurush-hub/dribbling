@@ -9,7 +9,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton(
             text="⚽ Открыть Dribbling",
-            web_app=WebAppInfo(url="https://google.com")  # потом заменим
+            web_app=WebAppInfo(url="https://dribbling-bot.vercel.app/")  # потом заменим
         )]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
