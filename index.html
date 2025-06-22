@@ -1,27 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Dribbling WebApp</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dribbling</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
       padding: 40px;
+      background-color: #f9f9f9;
     }
-    button {
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    input, button {
       display: block;
-      margin: 15px auto;
-      padding: 15px 25px;
-      font-size: 18px;
+      margin: 10px auto;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    input {
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>⚽ Dribbling</h1>
-  <button onclick="alert('Матч создан!')">Создать матч</button>
-  <button onclick="alert('Поиск матча...')">Найти матч</button>
-  <button onclick="alert('Открытие профиля...')">Профиль</button>
+  <h1>Dribbling ⚽️</h1>
+
+  <form id="matchForm" onsubmit="createMatch(event)">
+    <input type="text" id="matchName" placeholder="Название матча" required />
+    <input type="date" id="matchDate" required />
+    <input type="text" id="matchLocation" placeholder="Локация" required />
+    <button type="submit">✅ Создать матч</button>
+  </form>
+
+  <button onclick="findMatch()">🔍 Найти матч</button>
+  <button onclick="showProfile()">👤 Профиль</button>
+
+  <script>
+    function createMatch(event) {
+      event.preventDefault();
+      const name = document.getElementById("matchName").value;
+      const date = document.getElementById("matchDate").value;
+      const location = document.getElementById("matchLocation").value;
+
+      if (name && date && location) {
+        alert(`✅ Матч создан!\n\nНазвание: ${name}\nДата: ${date}\nЛокация: ${location}`);
+        document.getElementById("matchForm").reset();
+      } else {
+        alert("⚠️ Пожалуйста, заполните все поля");
+      }
+    }
+
+    function findMatch() {
+      alert("🔍 Поиск матчей пока в разработке");
+    }
+
+    function showProfile() {
+      try {
+        const user = Telegram.WebApp.initDataUnsafe.user;
+        if (user) {
+          alert(`👤 Профиль:\nИмя: ${user.first_name}\nID: ${user.id}`);
+        } else {
+          alert("⚠️ Нет данных пользователя");
+        }
+      } catch (e) {
+        alert("⚠️ Откройте через Telegram, чтобы увидеть профиль");
+      }
+    }
+
+    if (window.Telegram && Telegram.WebApp) {
+      Telegram.WebApp.ready();
+    }
+  </script>
 </body>
 </html>
