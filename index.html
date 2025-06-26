@@ -1,81 +1,244 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dribbling</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 50px;
-    }
-    button {
-      display: block;
-      margin: 20px auto; 
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dribbling WebApp</title>
+    <!-- Telegram WebApp API script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .matches-container {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .match-item {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        .match-item:last-child {
+            margin-bottom: 0;
+        }
+        .match-item strong {
+            color: #007bff;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .container {
+                padding: 20px;
+                border-radius: 8px;
+            }
+            h1 {
+                font-size: 1.6em;
+                margin-bottom: 20px;
+            }
+            button {
+                padding: 12px 15px;
+                font-size: 1em;
+            }
+            .button-group {
+                gap: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Dribbling ⚽️</h1>
+    <div class="container">
+        <h1>Dribbling WebApp</h1>
 
-  <button onclick="createMatch()">Создать матч</button>
-  <button onclick="loadMatches()">Мои матчи</button>
+        <div class="button-group">
+            <button id="createMatchBtn">Create Match</button>
+            <button id="myMatchesBtn">My Matches</button>
+            <button id="findMatchBtn">Find Match</button>
+            <button id="profileBtn">Profile</button>
+        </div>
 
-  <div id="matchList"></div>
+        <div id="matchesContainer" class="matches-container" style="display: none;">
+            <h2>Your Matches</h2>
+            <div id="matchesList"></div>
+        </div>
+    </div>
 
-  <script>
-    const scriptURL = "https://functions.yandexcloud.net/d4edr4lciksrs9o50ehq";
+    <script>
+        const BACKEND_URL = "https://functions.yandexcloud.net/d4ej3b807khm2o439oml";
+        const matchesContainer = document.getElementById('matchesContainer');
+        const matchesList = document.getElementById('matchesList');
 
-    function createMatch() {
-      const name = prompt("Введите название матча:");
-      const location = prompt("Введите место проведения:");
-      const date = new Date().toLocaleString();
+        // Initialize Telegram WebApp
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                console.log('Telegram WebApp initialized and expanded.');
+            } else {
+                console.warn('Telegram WebApp API not available. Running in standalone mode.');
+            }
+        });
 
-      if (!name || !location) {
-        alert("❗ Пожалуйста, введите все данные.");
-        return;
-      }
+        // Feature 1: Create Match
+        document.getElementById('createMatchBtn').addEventListener('click', async () => {
+            const name = prompt("Enter Match Name:");
+            if (!name) return;
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({ name, date, location }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(response => response.text())
-      .then(() => {
-        alert("✅ Матч успешно создан!");
-        loadMatches();
-      })
-      .catch(() => alert("Ошибка при создании матча 😢"));
-    }
+            const dateTime = prompt("Enter Date & Time (YYYY-MM-DD HH:MM):");
+            // Basic validation for date-time format
+            const dateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+            if (!dateTime || !dateTimeRegex.test(dateTime)) {
+                alert("❌ Invalid Date & Time format. Please use YYYY-MM-DD HH:MM.");
+                return;
+            }
 
-    function loadMatches() {
-      fetch(scriptURL)
-        .then(res => res.json())
-        .then(data => {
-          if (!Array.isArray(data)) {
-            throw new Error("Некорректный формат данных");
-          }
-          const matchList = document.getElementById("matchList");
-          matchList.innerHTML = "<h3>📋 Список матчей:</h3>" + data.map(match => `
-            <div>⚽ <b>${match.name}</b> — ${match.location} (${match.date})</div>
-          `).join("");
-        })
-        .catch(() => alert("⚠️ Не удалось загрузить матчи"));
-    }
+            const location = prompt("Enter Location:");
+            if (!location) return;
 
-    // Telegram WebApp Init
-    if (window.Telegram && Telegram.WebApp) {
-      Telegram.WebApp.ready();
-    }
-  </script>
+            const matchData = {
+                name: name,
+                date: dateTime,
+                location: location
+            };
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(matchData)
+                });
+
+                if (response.ok) {
+                    alert("✅ Match created!");
+                } else {
+                    const errorText = await response.text();
+                    alert(`❌ Error creating match: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error creating match:', error);
+                alert("❌ Error creating match. Please check your network connection.");
+            }
+        });
+
+        // Feature 2: My Matches
+        document.getElementById('myMatchesBtn').addEventListener('click', async () => {
+            matchesList.innerHTML = ''; // Clear previous matches
+            matchesContainer.style.display = 'none'; // Hide container initially
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const matches = await response.json();
+                    if (matches.length === 0) {
+                        alert("No matches yet");
+                    } else {
+                        matchesContainer.style.display = 'block'; // Show container
+                        matches.forEach(match => {
+                            const matchItem = document.createElement('div');
+                            matchItem.classList.add('match-item');
+                            matchItem.innerHTML = `
+                                <strong>Match Name:</strong> ${match.name}<br>
+                                <strong>Date & Time:</strong> ${match.date}<br>
+                                <strong>Location:</strong> ${match.location}
+                            `;
+                            matchesList.appendChild(matchItem);
+                        });
+                    }
+                } else {
+                    const errorText = await response.text();
+                    alert(`❌ Error fetching matches: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error fetching matches:', error);
+                alert("❌ Error fetching matches. Please check your network connection.");
+            }
+        });
+
+        // Feature 3: Find Match
+        document.getElementById('findMatchBtn').addEventListener('click', () => {
+            alert("🔍 Match search is under development");
+        });
+
+        // Feature 4: Profile
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            if (window.Telegram && window.Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+                const user = Telegram.WebApp.initDataUnsafe.user;
+                const firstName = user.first_name || "N/A";
+                const userId = user.id || "N/A";
+                alert(`👤 Name: ${firstName}\n🆔 ID: ${userId}`);
+            } else {
+                alert("Telegram user data not available. Please open this WebApp from Telegram.");
+            }
+        });
+    </script>
 </body>
 </html>
+```
