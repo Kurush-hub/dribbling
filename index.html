@@ -2,148 +2,79 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Dribbling ⚽️</title>
+  <title>Dribbling</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
-      padding: 40px;
-      background-color: #f9f9f9;
+      padding: 50px;
     }
-
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-
-    input {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      font-size: 16px;
-      width: 80%;
-      max-width: 300px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
     button {
       display: block;
-      margin: 10px auto;
-      padding: 12px 25px;
-      font-size: 16px;
+      margin: 20px auto; 
+      padding: 15px 30px;
+      font-size: 18px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
       background-color: #007bff;
       color: white;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #matches {
-      margin-top: 30px;
-      text-align: left;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .match {
-      background: #fff;
-      border: 1px solid #ddd;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 6px;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <h1>Dribbling ⚽️</h1>
 
-  <input id="matchName" type="text" placeholder="Название матча" />
-  <input id="matchLocation" type="text" placeholder="Локация" />
-  <button onclick="createMatch()">✅ Создать матч</button>
-  <button onclick="findMatch()">🔍 Найти матч</button>
-  <button onclick="showProfile()">👤 Профиль</button>
-  <div id="matches"></div>
+  <button onclick="createMatch()">Создать матч</button>
+  <button onclick="loadMatches()">Мои матчи</button>
+
+  <div id="matchList"></div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyk5IJl1-RcJ_38t5caio0qsTG0VABlkQPQVj0SCMQlcvV5qq-2-gQlkiLFsDJeUnXd/exec";
-
-    // Telegram init
-    if (window.Telegram && Telegram.WebApp) {
-      Telegram.WebApp.ready();
-    }
+    const scriptURL = "https://functions.yandexcloud.net/d4edr4lciksrs9o50ehq";
 
     function createMatch() {
-      const name = document.getElementById("matchName").value.trim();
-      const location = document.getElementById("matchLocation").value.trim();
-      const date = new Date().toLocaleDateString();
+      const name = prompt("Введите название матча:");
+      const location = prompt("Введите место проведения:");
+      const date = new Date().toLocaleString();
 
       if (!name || !location) {
-        alert("❗Введите название и локацию матча");
+        alert("❗ Пожалуйста, введите все данные.");
         return;
       }
 
       fetch(scriptURL, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ name, date, location }),
-        headers: { "Content-Type": "application/json" }
+        headers: { 'Content-Type': 'application/json' }
       })
-        .then(res => res.text())
-        .then(() => {
-          alert("✅ Матч создан!");
-          document.getElementById("matchName").value = "";
-          document.getElementById("matchLocation").value = "";
-        })
-        .catch(err => {
-          alert("⚠️ Ошибка при сохранении матча");
-          console.error(err);
-        });
+      .then(response => response.text())
+      .then(() => {
+        alert("✅ Матч успешно создан!");
+        loadMatches();
+      })
+      .catch(() => alert("Ошибка при создании матча 😢"));
     }
 
-    function findMatch() {
+    function loadMatches() {
       fetch(scriptURL)
         .then(res => res.json())
         .then(data => {
-          const container = document.getElementById("matches");
-          container.innerHTML = "<h3>📋 Мои матчи:</h3>";
-          if (data.length === 0) {
-            container.innerHTML += "<p>Нет матчей</p>";
-            return;
+          if (!Array.isArray(data)) {
+            throw new Error("Некорректный формат данных");
           }
-          data.forEach(match => {
-            container.innerHTML += `
-              <div class="match">
-                <strong>${match.name}</strong><br/>
-                📍 ${match.location}<br/>
-                📅 ${match.date}
-              </div>
-            `;
-          });
+          const matchList = document.getElementById("matchList");
+          matchList.innerHTML = "<h3>📋 Список матчей:</h3>" + data.map(match => `
+            <div>⚽ <b>${match.name}</b> — ${match.location} (${match.date})</div>
+          `).join("");
         })
-        .catch(err => {
-          alert("⚠️ Ошибка при загрузке матчей");
-          console.error(err);
-        });
+        .catch(() => alert("⚠️ Не удалось загрузить матчи"));
     }
 
-    function showProfile() {
-      if (window.Telegram && Telegram.WebApp) {
-        const user = Telegram.WebApp.initDataUnsafe.user;
-        if (user) {
-          alert(`👤 Профиль:\nИмя: ${user.first_name}\nID: ${user.id}`);
-        } else {
-          alert("⚠️ Пользователь не определён");
-        }
-      } else {
-        alert("⚠️ Открой через Telegram");
-      }
+    // Telegram WebApp Init
+    if (window.Telegram && Telegram.WebApp) {
+      Telegram.WebApp.ready();
     }
   </script>
 </body>
